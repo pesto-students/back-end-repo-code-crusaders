@@ -6,7 +6,12 @@ const { roles } = require('../config/roles');
 
 const userSchema = mongoose.Schema(
   {
-    name: {
+    firstname: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    lastname: {
       type: String,
       required: true,
       trim: true,
@@ -35,10 +40,39 @@ const userSchema = mongoose.Schema(
       },
       private: true, // used by the toJSON plugin
     },
+    doctorID: {
+      type: String,
+      trim: true,
+    },
+    labID: {
+      type: String,
+      trim: true,
+    },
+    hospital: {
+      name: {
+        type: String,
+        trim: true,
+      },
+      city: {
+        type: String,
+        trim: true,
+      },
+      pincode: {
+        type: String,
+        trim: true,
+      },
+    },
+    phone: {
+      type: String,
+      trim: true,
+    },
+    // primaryAddress: {
+
+    // },
     role: {
       type: String,
       enum: roles,
-      default: 'user',
+      default: 'doctor',
     },
     isEmailVerified: {
       type: Boolean,
@@ -47,7 +81,7 @@ const userSchema = mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // add plugin that converts mongoose to json
