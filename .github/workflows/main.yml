@@ -36,9 +36,9 @@ jobs:
         run: npm ci
 
       - name: Run linters
-          run: |
-            npm run lint
-            npm run prettier
+        run: |
+          npm run lint
+          npm run prettier
         # uses: wearerequired/lint-action@v2
         # with:
         #   eslint: true
