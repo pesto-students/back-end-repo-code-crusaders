@@ -19,6 +19,10 @@
     "docker:test": "docker-compose -f docker-compose.yml -f docker-compose.test.yml up",
     "prepare": "husky install"
   },
+  "lint-staged": {
+    "*.js": "eslint --fix",
+    "**/*.js": "prettier --write"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pesto-students/back-end-repo-code-crusaders.git"
