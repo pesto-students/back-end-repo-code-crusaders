@@ -13,7 +13,7 @@ const registerDoctor = {
     landmark: Joi.string().required(),
     city: Joi.string().required(),
     state: Joi.string().required(),
-    pincode: Joi.string().regex(`^[1-9]{1}[0-9]{2}\\s{0, 1}[0-9]{3}$`).required(),
+    // pincode: Joi.string().regex(`^[1-9]{1}[0-9]{2}\\s{0, 1}[0-9]{3}$`).required(),
   }),
 };
 
