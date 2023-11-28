@@ -1,11 +1,19 @@
 const Joi = require('joi');
 const { password } = require('./custom.validation');
 
-const register = {
+const registerDoctor = {
   body: Joi.object().keys({
     email: Joi.string().required().email(),
     password: Joi.string().required().custom(password),
-    name: Joi.string().required(),
+    firstname: Joi.string().required(),
+    lastname: Joi.string().required(),
+    doctorID: Joi.string().required(),
+    hospital: Joi.string().required(),
+    addressLine1: Joi.string().required(),
+    landmark: Joi.string().required(),
+    city: Joi.string().required(),
+    state: Joi.string().required(),
+    pincode: Joi.string().regex(`^[1-9]{1}[0-9]{2}\\s{0, 1}[0-9]{3}$`).required(),
   }),
 };
 
@@ -50,7 +58,7 @@ const verifyEmail = {
 };
 
 module.exports = {
-  register,
+  registerDoctor,
   login,
   logout,
   refreshTokens,
