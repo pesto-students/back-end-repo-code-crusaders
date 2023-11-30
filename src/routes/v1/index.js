@@ -6,16 +6,16 @@ const userRoute = require('./user.route');
 
 const router = express.Router();
 
-const defaultRoutes = [
-  {
-    path: '/auth',
-    route: authRoute,
-  },
-  {
-    path: '/users',
-    route: userRoute,
-  },
-];
+// const defaultRoutes = [
+//   {
+//     path: '/auth',
+//     route: authRoute,
+//   },
+//   {
+//     path: '/users',
+//     route: userRoute,
+//   },
+// ];
 
 // const devRoutes = [
 //   // routes available only in development mode
@@ -25,15 +25,16 @@ const defaultRoutes = [
 //   },
 // ];
 
-defaultRoutes.forEach((route) => {
-  // console.log("HEllo", route.route);
-  router.use(route.path, route.route);
-});
+router.use('/auth', authRoute);
+router.use('/users', userRoute);
+
+// defaultRoutes.forEach((route) => {
+//   router.use(route.path, route.route);
+// });
 
 /* istanbul ignore next */
 // if (config.env === 'development') {
 //   devRoutes.forEach((route) => {
-//     console.log(route.route);
 //     router.use(route.path, route.route);
 //   });
 // }
