@@ -1,6 +1,8 @@
 const httpStatus = require('http-status');
 const catchAsync = require('../utils/catchAsync');
-const { authService, userService, tokenService, emailService } = require('../services');
+const { authService, tokenService, emailService } = require('../services');
+const ApiError = require('../utils/ApiError');
+const { User } = require('../models');
 
 const register = catchAsync(async (req, res) => {
   if (req.body.doctorID) {
@@ -8,14 +10,25 @@ const register = catchAsync(async (req, res) => {
   } else if (req.body.labID) {
     req.body.role = 'lab';
   }
-  const user = await userService.createUser(req.body);
+
+  const userBody = req.body;
+  if (await User.isEmailTaken(userBody.email)) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
+  }
+  const user = await User.create(userBody);
+
   const tokens = await tokenService.generateAuthTokens(user);
   res.status(httpStatus.CREATED).send({ user, tokens });
 });
 
 const login = catchAsync(async (req, res) => {
   const { email, password } = req.body;
-  const user = await authService.loginUserWithEmailAndPassword(email, password);
+
+  const user = await User.getOne({ email });
+  if (!user || !(await user.isPasswordMatch(password))) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'Incorrect email or password');
+  }
+
   const tokens = await tokenService.generateAuthTokens(user);
   res.send({ user, tokens });
 });
