@@ -65,6 +65,11 @@ const verifyEmail = catchAsync(async (req, res) => {
   res.status(httpStatus.NO_CONTENT).send();
 });
 
+const verifyUser = catchAsync(async (req, res) => {
+  const user = await User.findById(req.user.id);
+  res.send({ user });
+});
+
 module.exports = {
   register,
   login,
@@ -74,4 +79,5 @@ module.exports = {
   resetPassword,
   sendVerificationEmail,
   verifyEmail,
+  verifyUser,
 };
