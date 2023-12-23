@@ -26,7 +26,7 @@ const login = catchAsync(async (req, res) => {
 
   const user = await User.findOne({ email });
   if (!user || !(await user.isPasswordMatch(password))) {
-    throw new ApiError(httpStatus.UNAUTHORIZED, 'Incorrect email or password');
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Incorrect email or password');
   }
 
   const tokens = await tokenService.generateAuthTokens(user);

@@ -41,19 +41,20 @@ app.use(mongoSanitize());
 // gzip compression
 app.use(compression());
 
-// const whitelist = ['http://localhost:3000', process.env.FRONTEND_URL, '*'];
-// const corsOptions = {
-//   origin(origin, callback) {
-//     if (whitelist.indexOf(origin) !== -1) {
-//       callback(null, true);
-//     } else {
-//       callback(new Error('Not allowed by CORS'));
-//     }
-//   },
-// };
+const whitelist = ['http://localhost:3000', process.env.FRONTEND_URL];
+const corsOptions = {
+  origin(origin, callback) {
+    if (whitelist.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+};
 
 // enable cors
-app.use(cors());
+app.use(cors(corsOptions));
 app.options('*', cors());
 const allowCrossDomain = function (req, res, next) {
   res.header('Access-Control-Allow-Origin', '*');
