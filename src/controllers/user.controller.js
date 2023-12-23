@@ -3,9 +3,14 @@ const pick = require('../utils/pick');
 const ApiError = require('../utils/ApiError');
 const catchAsync = require('../utils/catchAsync');
 const { userService } = require('../services');
+const { User } = require('../models');
 
 const createUser = catchAsync(async (req, res) => {
-  const user = await userService.createUser(req.body);
+  if (await User.isEmailTaken(req.body.email)) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
+  }
+  const user = await User.create(req.body);
+  // const user = await userService.createUser(req.body);
   res.status(httpStatus.CREATED).send(user);
 });
 
