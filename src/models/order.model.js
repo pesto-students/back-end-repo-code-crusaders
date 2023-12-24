@@ -4,13 +4,15 @@ const { toJSON, paginate } = require('./plugins');
 
 const orderSchema = mongoose.Schema(
   {
-    productID: {
+    product: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'Product',
+      required: true,
+    },
+    doctor: {
       type: mongoose.Schema.ObjectId,
     },
-    doctorID: {
-      type: mongoose.Schema.ObjectId,
-    },
-    labID: {
+    lab: {
       type: mongoose.Schema.ObjectId,
     },
     address: {
