@@ -1,27 +1,59 @@
 const mongoose = require('mongoose');
 const { toJSON, paginate } = require('./plugins');
 
+const productDetailsSchema = mongoose.Schema({
+  metal: {
+    type: String,
+  },
+  features: {
+    type: String,
+  },
+  specifications: {
+    type: String,
+  },
+  materialComposition: {
+    type: String,
+  },
+});
+
 const productSchema = mongoose.Schema(
   {
-    productName: {
+    name: {
       type: String,
+      trim: true,
+      required: true,
     },
-    productDetails: {
-      type: Object,
-      schema: {
-        metal: {
+    details: {
+      type: productDetailsSchema,
+    },
+    price: {
+      type: Number,
+      required: true,
+    },
+    mrp: {
+      type: Number,
+      required: true,
+    },
+    expectedDays: {
+      type: Number,
+      required: true,
+    },
+    customFields: [
+      {
+        name: {
           type: String,
-        },
-        features: {
-          type: String,
-        },
-        specifications: {
-          type: String,
-        },
-        materialComposition: {
-          type: String,
+          trim: true,
         },
       },
+    ],
+    lab: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    rating: {
+      type: Number,
+      default: 0.0,
     },
   },
   {
