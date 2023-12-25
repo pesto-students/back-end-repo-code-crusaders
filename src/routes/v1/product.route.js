@@ -3,23 +3,20 @@ const auth = require('../../middlewares/auth');
 const validate = require('../../middlewares/validate');
 const { productValidation } = require('../../validations');
 const productController = require('../../controllers/product.controller');
-const { uploadthing } = require('../../middlewares/uploadthing');
 
 const router = express.Router();
 
 router
   .route('/')
-  // .get(auth('verify'), userController.getUser)
-  .post(auth('Createproduct'), validate(productValidation.createProduct), productController.createUser)
-  .get(auth('getUsers'), validate(productValidation.getUsers), productController.getUsers)
-  .patch(auth('productImage'), uploadthing);
+  .post(auth('Createproduct'), validate(productValidation.createProduct), productController.createProduct)
+  .get(auth('getProducts'), validate(productValidation.getProducts), productController.getProducts);
 
-// router.use('/image', uploadthing);
 router.post('/image', productController.getPresignedURL);
-// router
-//   .route('/:userId')
-//   .get(auth('getUsers'), validate(userValidation.getUser), userController.getUser)
-//   .patch(auth('manageUsers'), validate(userValidation.updateUser), userController.updateUser)
-//   .delete(auth('manageUsers'), validate(userValidation.deleteUser), userController.deleteUser);
+
+router
+  .route('/:productId')
+  .get(auth('getProduct'), validate(productValidation.getProduct), productController.getProduct)
+  .patch(auth('updateProduct'), validate(productValidation.updateProduct), productController.updateProduct)
+  .delete(auth('deleteProduct'), validate(productValidation.deleteProduct), productController.deleteProduct);
 
 module.exports = router;

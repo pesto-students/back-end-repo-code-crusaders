@@ -1,54 +1,78 @@
 const Joi = require('joi');
-const { password, objectId } = require('./custom.validation');
+const { objectId } = require('./custom.validation');
 
 const createProduct = {
   body: Joi.object().keys({
-    email: Joi.string().required().email(),
-    password: Joi.string().required().custom(password),
     name: Joi.string().required(),
-    role: Joi.string().required().valid('user', 'admin'),
+    details: Joi.object({
+      metal: Joi.string(),
+      features: Joi.string(),
+      specifications: Joi.string(),
+      materialComposition: Joi.string(),
+    }),
+    price: Joi.number().required(),
+    mrp: Joi.number().required(),
+    expectedDays: Joi.number().required(),
+    customFields: Joi.array().items(
+      Joi.object({
+        name: Joi.string().trim(),
+      }),
+    ),
+    images: Joi.array().items(Joi.string()).max(3).required(), // Maximum 3 images and required
   }),
 };
 
-const getUsers = {
+const getProducts = {
   query: Joi.object().keys({
-    name: Joi.string(),
-    role: Joi.string(),
+    lab: Joi.string().custom(objectId),
     sortBy: Joi.string(),
     limit: Joi.number().integer(),
     page: Joi.number().integer(),
   }),
 };
 
-const getUser = {
+const getProduct = {
   params: Joi.object().keys({
-    userId: Joi.string().custom(objectId),
+    productId: Joi.string().custom(objectId),
   }),
 };
 
-const updateUser = {
+const updateProduct = {
   params: Joi.object().keys({
-    userId: Joi.required().custom(objectId),
+    productId: Joi.required().custom(objectId),
   }),
   body: Joi.object()
     .keys({
-      email: Joi.string().email(),
-      password: Joi.string().custom(password),
       name: Joi.string(),
+      details: Joi.object({
+        metal: Joi.string(),
+        features: Joi.string(),
+        specifications: Joi.string(),
+        materialComposition: Joi.string(),
+      }),
+      price: Joi.number(),
+      mrp: Joi.number(),
+      expectedDays: Joi.number(),
+      customFields: Joi.array().items(
+        Joi.object({
+          name: Joi.string().trim(),
+        }),
+      ),
+      images: Joi.array().items(Joi.string()).max(3),
     })
     .min(1),
 };
 
-const deleteUser = {
+const deleteProduct = {
   params: Joi.object().keys({
-    userId: Joi.string().custom(objectId),
+    productId: Joi.string().custom(objectId),
   }),
 };
 
 module.exports = {
   createProduct,
-  getUsers,
-  getUser,
-  updateUser,
-  deleteUser,
+  getProducts,
+  getProduct,
+  updateProduct,
+  deleteProduct,
 };

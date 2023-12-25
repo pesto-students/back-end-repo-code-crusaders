@@ -1,7 +1,9 @@
 /* eslint-disable import/no-extraneous-dependencies */
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
-const { S3Client, GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, GetObjectCommand, PutObjectCommand, HeadObjectCommand } = require('@aws-sdk/client-s3');
 const { aws } = require('../config/config');
+
+const productBucketPrefix = 'product/';
 
 const clientParams = {
   bucketEndpoint: aws.bucket_name,
@@ -18,7 +20,7 @@ const uploadS3Image = async (file) => {
   const putObjectParams = {
     Bucket: aws.bucket_name,
     ACL: 'public-read',
-    Key: `product/${file.name}`,
+    Key: `${productBucketPrefix}${file.name}`,
     ContentType: file.type,
   };
 
@@ -30,7 +32,7 @@ const uploadS3Image = async (file) => {
 
 const getS3Image = async (file) => {
   const getObjectParams = {
-    Key: `product/${file.name}`,
+    Key: `${productBucketPrefix}${file.name}`,
   };
   const command = new GetObjectCommand(getObjectParams);
   const url = await getSignedUrl(client, command, { expiresIn: 3600 });
@@ -38,7 +40,27 @@ const getS3Image = async (file) => {
   return url;
 };
 
+const validateS3Objects = async (list) => {
+  async function validateObject(file) {
+    const headObjectParams = {
+      Bucket: aws.bucket_name,
+      Key: `${productBucketPrefix}${file.name}`,
+    };
+    const command = new HeadObjectCommand(headObjectParams);
+    try {
+      await client.send(command);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  const responses = await Promise.all(list.map((file) => validateObject(file)));
+  return responses.every((isTrue) => isTrue);
+};
+
 module.exports = {
   uploadS3Image,
   getS3Image,
+  validateS3Objects,
 };
