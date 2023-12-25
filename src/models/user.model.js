@@ -104,10 +104,10 @@ const userSchema = mongoose.Schema(
       },
       private: true, // used by the toJSON plugin
     },
-    doctorID: {
+    doctor: {
       type: doctorSchema,
     },
-    labID: {
+    lab: {
       type: labSchema,
     },
     address: [AddressSchema],
