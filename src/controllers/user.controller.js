@@ -2,7 +2,6 @@ const httpStatus = require('http-status');
 const pick = require('../utils/pick');
 const ApiError = require('../utils/ApiError');
 const catchAsync = require('../utils/catchAsync');
-const { userService } = require('../services');
 const { User } = require('../models');
 
 const createUser = catchAsync(async (req, res) => {
@@ -10,19 +9,20 @@ const createUser = catchAsync(async (req, res) => {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
   }
   const user = await User.create(req.body);
-  // const user = await userService.createUser(req.body);
   res.status(httpStatus.CREATED).send(user);
 });
 
 const getUsers = catchAsync(async (req, res) => {
   const filter = pick(req.query, ['name', 'role']);
   const options = pick(req.query, ['sortBy', 'limit', 'page']);
-  const result = await userService.queryUsers(filter, options);
-  res.send(result);
+  const users = await User.paginate(filter, options);
+  res.send(users);
 });
 
 const getUser = catchAsync(async (req, res) => {
-  const user = await userService.getUserById(req.params.userId);
+  const { userId } = req.params;
+
+  const user = await User.findById(userId);
   if (!user) {
     throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
   }
@@ -30,13 +30,48 @@ const getUser = catchAsync(async (req, res) => {
 });
 
 const updateUser = catchAsync(async (req, res) => {
-  const user = await userService.updateUserById(req.params.userId, req.body);
+  const { userId } = req.params;
+  const { email } = req.body;
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+  if (email && (await User.isEmailTaken(email, userId))) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
+  }
+  Object.assign(user, req.body);
+  await user.save();
   res.send(user);
 });
 
 const deleteUser = catchAsync(async (req, res) => {
-  await userService.deleteUserById(req.params.userId);
+  const { userId } = req.params;
+
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+  await user.remove();
   res.status(httpStatus.NO_CONTENT).send();
+});
+
+const getLabs = catchAsync(async (req, res) => {
+  console.log('getLabs', req.user);
+
+  const filter = {
+    city: req.user.city,
+    role: 'lab',
+  };
+
+  const options = {
+    populate: 'lab',
+  };
+
+  const labs = await User.paginate(filter, options);
+
+  console.log(labs);
+
+  res.status(httpStatus.OK).send(labs);
 });
 
 module.exports = {
@@ -45,4 +80,6 @@ module.exports = {
   getUser,
   updateUser,
   deleteUser,
+
+  getLabs,
 };

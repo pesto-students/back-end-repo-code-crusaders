@@ -4,6 +4,70 @@ const bcrypt = require('bcryptjs');
 const { toJSON, paginate } = require('./plugins');
 const { roles } = require('../config/roles');
 
+const doctorSchema = mongoose.Schema({
+  regID: {
+    type: String,
+    required: true,
+  },
+  hospital: {
+    type: String,
+    required: true,
+  },
+});
+
+const labSchema = mongoose.Schema({
+  regID: {
+    type: String,
+    required: true,
+  },
+  name: {
+    type: String,
+    required: true,
+  },
+});
+
+const AddressSchema = mongoose.Schema({
+  address1: {
+    type: String,
+    required: true,
+  },
+  address2: {
+    type: String,
+  },
+  landmark: {
+    type: String,
+    required: true,
+  },
+  city: {
+    type: String,
+    required: true,
+  },
+  state: {
+    type: String,
+    required: true,
+  },
+  country: {
+    type: String,
+    required: true,
+  },
+  pincode: {
+    type: String,
+    required: true,
+  },
+});
+
+const pointSchema = new mongoose.Schema({
+  type: {
+    type: String,
+    enum: ['Point'],
+    required: true,
+  },
+  coordinates: {
+    type: [Number],
+    required: true,
+  },
+});
+
 const userSchema = mongoose.Schema(
   {
     firstname: {
@@ -41,34 +105,26 @@ const userSchema = mongoose.Schema(
       private: true, // used by the toJSON plugin
     },
     doctorID: {
-      type: String,
-      trim: true,
+      type: doctorSchema,
     },
     labID: {
-      type: String,
-      trim: true,
+      type: labSchema,
     },
-    hospital: {
-      name: {
-        type: String,
-        trim: true,
-      },
-      city: {
-        type: String,
-        trim: true,
-      },
-      pincode: {
-        type: String,
-        trim: true,
-      },
+    address: [AddressSchema],
+    city: {
+      type: String,
+    },
+    location: {
+      type: pointSchema,
+    },
+    primaryAddress: {
+      type: Number,
+      default: 0,
     },
     phone: {
       type: String,
       trim: true,
     },
-    // primaryAddress: {
-
-    // },
     role: {
       type: String,
       enum: roles,
