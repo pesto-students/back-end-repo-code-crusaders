@@ -1,3 +1,4 @@
+/* eslint-disable import/no-unresolved */
 const express = require('express');
 const helmet = require('helmet');
 const sanitizer = require('perfect-express-sanitizer');
