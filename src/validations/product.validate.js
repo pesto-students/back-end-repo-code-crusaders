@@ -12,7 +12,7 @@ const createProduct = {
     }),
     price: Joi.number().required(),
     mrp: Joi.number().required(),
-    expectedDays: Joi.number().required(),
+    expectedDays: Joi.string().valid('2-5', '4-8', '9-12', '13-17'),
     customFields: Joi.array().items(
       Joi.object({
         name: Joi.string().trim(),
@@ -24,6 +24,7 @@ const createProduct = {
 
 const getProducts = {
   query: Joi.object().keys({
+    active: Joi.bool(),
     lab: Joi.string().custom(objectId),
     sortBy: Joi.string(),
     limit: Joi.number().integer(),
@@ -63,6 +64,15 @@ const updateProduct = {
     .min(1),
 };
 
+const updateProductStatus = {
+  params: Joi.object().keys({
+    productId: Joi.required().custom(objectId),
+  }),
+  body: Joi.object().keys({
+    active: Joi.boolean(),
+  }),
+};
+
 const deleteProduct = {
   params: Joi.object().keys({
     productId: Joi.string().custom(objectId),
@@ -74,5 +84,6 @@ module.exports = {
   getProducts,
   getProduct,
   updateProduct,
+  updateProductStatus,
   deleteProduct,
 };

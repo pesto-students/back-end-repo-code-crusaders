@@ -10,7 +10,9 @@ const getProducts = catchAsync(async (req, res) => {
   // const filter = pick(req.query, ['lab']);
   const options = pick(req.query, ['sortBy', 'limit', 'page']);
 
-  const lab = await User.findById(req.query.lab);
+  const labId = req.query.lab ? req.query.lab : req.user._id;
+
+  const lab = await User.findById(labId);
   if (!lab) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'No lab found');
   }
@@ -18,7 +20,10 @@ const getProducts = catchAsync(async (req, res) => {
   const filter = {
     lab: lab._id,
   };
-  options.populate = 'lab.lab';
+  if (typeof req.query.active === 'boolean') {
+    filter.active = req.query.active;
+  }
+  // options.populate = 'lab.lab';
 
   // console.log(filter);
   // console.log(options);
@@ -41,23 +46,42 @@ const getProducts = catchAsync(async (req, res) => {
   //       name: 'Shade',
   //     },
   //   ],
-  //   lab: '658997951317adbabc1f611c',
+  //   lab: req.query.lab,
   //   rating: 4.3,
   // };
   // const product = await Product.create(params);
   // console.log(product);
-  // const countDocuments = await Product.countDocuments({ lab: lab._id });
-  // console.log('count docs', countDocuments);
+  console.log(options);
   const products = await Product.paginate(filter, options);
 
   console.log(products);
+  products.lab = lab;
 
   res.status(httpStatus.OK).send(products);
+});
+
+const getProductCount = catchAsync(async (req, res) => {
+  console.log('user,,,', req.user);
+  const id = req.user._id;
+  console.log('id', id);
+  const countPromise = Promise.all([
+    Product.countDocuments({ lab: id, active: true }),
+    Product.countDocuments({ lab: id, active: false }),
+  ]);
+  const [active, inactive] = await countPromise;
+
+  const productCount = {
+    All: active + inactive,
+    Active: active,
+    Inactive: inactive,
+  };
+  return res.status(httpStatus.OK).send(productCount);
 });
 
 const createProduct = catchAsync(async (req, res) => {
   const labBody = req.body;
   labBody.lab = req.user._id;
+  labBody.active = true;
 
   // validate Images.
   if (!validateS3Objects(labBody.images)) {
@@ -113,6 +137,7 @@ const getPresignedURL = catchAsync(async (req, res) => {
 
 module.exports = {
   getProducts,
+  getProductCount,
   getProduct,
   createProduct,
   updateProduct,

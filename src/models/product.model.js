@@ -35,7 +35,8 @@ const productSchema = mongoose.Schema(
       required: true,
     },
     expectedDays: {
-      type: Number,
+      type: String,
+      enum: ['2-5', '4-8', '9-12', '13-17'],
       required: true,
     },
     customFields: [
@@ -50,6 +51,11 @@ const productSchema = mongoose.Schema(
       type: mongoose.Schema.ObjectId,
       ref: 'User',
       required: true,
+    },
+    active: {
+      type: Boolean,
+      required: true,
+      default: true,
     },
     rating: {
       type: Number,

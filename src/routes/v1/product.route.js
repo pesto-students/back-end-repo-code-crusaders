@@ -8,15 +8,16 @@ const router = express.Router();
 
 router
   .route('/')
-  .post(auth('Createproduct'), validate(productValidation.createProduct), productController.createProduct)
+  .post(auth('createProduct'), validate(productValidation.createProduct), productController.createProduct)
   .get(auth('getProducts'), validate(productValidation.getProducts), productController.getProducts);
 
 router.post('/image', productController.getPresignedURL);
-
+router.get('/count', auth('getProducts'), productController.getProductCount);
 router
   .route('/:productId')
   .get(auth('getProduct'), validate(productValidation.getProduct), productController.getProduct)
-  .patch(auth('updateProduct'), validate(productValidation.updateProduct), productController.updateProduct)
+  .put(auth('updateProduct'), validate(productValidation.updateProduct), productController.updateProduct)
+  .patch(auth('updateProduct'), validate(productValidation.updateProductStatus), productController.updateProduct)
   .delete(auth('deleteProduct'), validate(productValidation.deleteProduct), productController.deleteProduct);
 
 module.exports = router;
