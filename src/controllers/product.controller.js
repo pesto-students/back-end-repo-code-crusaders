@@ -76,7 +76,6 @@ const getProducts = catchAsync(async (req, res) => {
         const updatedImages = await Promise.all(
           productObj.images.map(async (image) => {
             const signedUrl = await getS3Image(image, bucketPath);
-            // Assuming that you want to update the image object with the signed URL
             return signedUrl;
           }),
         );
@@ -132,7 +131,20 @@ const createProduct = catchAsync(async (req, res) => {
 const getProduct = catchAsync(async (req, res) => {
   const { productId } = req.params;
 
-  const product = await Product.findById(productId);
+  let product = await Product.findById(productId).populate('lab');
+  if (!product) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Product not found');
+  }
+  product = product.toObject();
+
+  // get Image signed URL
+  const updatedImages = await Promise.all(
+    product.images.map(async (image) => {
+      const signedUrl = await getS3Image(image, bucketPath);
+      return signedUrl;
+    }),
+  );
+  product.images = updatedImages;
 
   res.status(httpStatus.OK).send(product);
 });
