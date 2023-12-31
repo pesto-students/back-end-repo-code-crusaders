@@ -1,6 +1,6 @@
 const httpStatus = require('http-status');
 const { v4: uuid } = require('uuid');
-const { uploadS3Image, validateS3Objects } = require('../utils/s3');
+const { uploadS3Image, validateS3Objects, getS3Image } = require('../utils/s3');
 const pick = require('../utils/pick');
 const ApiError = require('../utils/ApiError');
 const catchAsync = require('../utils/catchAsync');
@@ -54,8 +54,41 @@ const getProducts = catchAsync(async (req, res) => {
   // };
   // const product = await Product.create(params);
   // console.log(product);
-  console.log(options);
+  // await Product.updateMany(
+  //   {},
+  //   {
+  //     $set: {
+  //       images: [
+  //         'f236bb6d-d407-4176-a239-6aab84ff4494silver_cover.jpg',
+  //         'bfbfa72e-abf3-45dd-af5c-c25367496a55gold_cover.jpg',
+  //       ],
+  //     },
+  //   },
+  // );
   const products = await Product.paginate(filter, options);
+  // products.results = products.results.toObject();
+  console.log('options', products);
+  products.results = await Promise.all(
+    products.results.map(async (product) => {
+      const productObj = product.toObject();
+      if (productObj.images && productObj.images.length > 0) {
+        // Map over the images of the current product and update them
+        const updatedImages = await Promise.all(
+          productObj.images.map(async (image) => {
+            const signedUrl = await getS3Image(image, bucketPath);
+            // Assuming that you want to update the image object with the signed URL
+            return signedUrl;
+          }),
+        );
+
+        // Update the images array of the current product with the updatedImages
+        return { ...productObj, images: updatedImages };
+      }
+
+      // If the product doesn't have images, return it as is
+      return product;
+    }),
+  );
 
   console.log(products);
   products.lab = lab;
@@ -82,15 +115,16 @@ const getProductCount = catchAsync(async (req, res) => {
 });
 
 const createProduct = catchAsync(async (req, res) => {
-  const labBody = req.body;
-  labBody.lab = req.user._id;
-  labBody.active = true;
+  const productBody = req.body;
+  productBody.lab = req.user._id;
+  productBody.active = true;
 
   // validate Images.
-  if (!validateS3Objects(labBody.images)) {
+  if (!validateS3Objects(productBody.images, bucketPath)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Invalid Image Names incuded');
   }
-  const product = await Product.create(labBody);
+  console.log('product body', productBody);
+  const product = await Product.create(productBody);
 
   res.status(httpStatus.CREATED).send(product);
 });
@@ -110,7 +144,9 @@ const updateProduct = catchAsync(async (req, res) => {
   if (!product) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'No Product Found');
   }
+  req.body.expectedDays = '13-17';
   Object.assign(product, req.body);
+  console.log(product);
   await product.save();
 
   res.status(httpStatus.OK).send(product);

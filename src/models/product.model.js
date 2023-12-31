@@ -52,6 +52,11 @@ const productSchema = mongoose.Schema(
       ref: 'User',
       required: true,
     },
+    images: [
+      {
+        type: String,
+      },
+    ],
     active: {
       type: Boolean,
       required: true,
