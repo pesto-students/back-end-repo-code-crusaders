@@ -25,6 +25,29 @@ if (config.env !== 'test') {
 // set security HTTP headers
 app.use(helmet());
 
+const whitelist = ['http://localhost:3000', process.env.FRONTEND_URL];
+const corsOptions = {
+  origin(origin, callback) {
+    if (whitelist.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+};
+// const allowCrossDomain = function (req, res, next) {
+//   res.header('Access-Control-Allow-Origin', '*');
+//   res.header('Access-Control-Allow-Methods', 'GET, PUT, POST, DELETE, PUT, PATCH');
+//   res.header('Access-Control-Allow-Headers', 'Content-Type');
+//   next();
+// };
+
+// enable cors
+app.use(cors(corsOptions));
+// app.options('*', cors());
+// app.use(allowCrossDomain);
+
 // parse json request body
 app.use(express.json());
 
@@ -41,29 +64,6 @@ app.use(mongoSanitize());
 
 // gzip compression
 app.use(compression());
-
-const whitelist = ['http://localhost:3000', process.env.FRONTEND_URL];
-const corsOptions = {
-  origin(origin, callback) {
-    if (whitelist.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-};
-
-// enable cors
-app.use(cors(corsOptions));
-app.options('*', cors());
-const allowCrossDomain = function (req, res, next) {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, PUT, POST, DELETE, PUT, PATCH');
-  res.header('Access-Control-Allow-Headers', 'Content-Type');
-  next();
-};
-app.use(allowCrossDomain);
 
 // jwt authentication
 app.use(passport.initialize());
