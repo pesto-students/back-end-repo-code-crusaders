@@ -36,7 +36,6 @@ const AddressSchema = mongoose.Schema({
   },
   landmark: {
     type: String,
-    required: true,
   },
   city: {
     type: String,
@@ -91,6 +90,9 @@ const userSchema = mongoose.Schema(
           throw new Error('Invalid email');
         }
       },
+    },
+    image: {
+      type: String,
     },
     password: {
       type: String,

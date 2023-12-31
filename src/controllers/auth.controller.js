@@ -1,17 +1,22 @@
 const httpStatus = require('http-status');
+const { v4: uuid } = require('uuid');
 const catchAsync = require('../utils/catchAsync');
 const { authService, tokenService, emailService } = require('../services');
+const { uploadS3Image } = require('../utils/s3');
 const ApiError = require('../utils/ApiError');
 const { User } = require('../models');
 
+const bucketPath = 'user/';
+
 const register = catchAsync(async (req, res) => {
-  if (req.body.doctorID) {
-    req.body.role = 'doctor';
-  } else if (req.body.labID) {
-    req.body.role = 'lab';
+  const userBody = req.body;
+  if (req.body.doctor) {
+    userBody.role = 'doctor';
+  } else if (req.body.lab) {
+    userBody.role = 'lab';
+    userBody.address = [userBody.address];
   }
 
-  const userBody = req.body;
   if (await User.isEmailTaken(userBody.email)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
   }
@@ -70,6 +75,18 @@ const verifyUser = catchAsync(async (req, res) => {
   res.send({ user });
 });
 
+const getPresignedURL = catchAsync(async (req, res) => {
+  // gen preSigned URL
+  console.log(req.body);
+  const { file } = req.body;
+  file.name = uuid() + file.name;
+
+  console.log(file);
+  const signedURL = await uploadS3Image(file, bucketPath);
+
+  res.status(httpStatus.OK).send({ signedURL, file });
+});
+
 module.exports = {
   register,
   login,
@@ -80,4 +97,5 @@ module.exports = {
   sendVerificationEmail,
   verifyEmail,
   verifyUser,
+  getPresignedURL,
 };

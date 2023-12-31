@@ -13,6 +13,8 @@ const registerDoctor = {
     landmark: Joi.string().required(),
     city: Joi.string().required(),
     state: Joi.string().required(),
+    // country: Joi.string().required(),
+    // image:
     // pincode: Joi.string().regex(`^[1-9]{1}[0-9]{2}\\s{0, 1}[0-9]{3}$`).required(),
   }),
 };
@@ -23,16 +25,19 @@ const registerLab = {
     password: Joi.string().required().custom(password),
     firstname: Joi.string().required(),
     lastname: Joi.string().required(),
-    labName: Joi.string().required(),
-    labID: Joi.string().required(),
-    affiliationNo: Joi.string().required(),
-    gstNo: Joi.string().required(),
-    addressLine1: Joi.string().required(),
-    landmark: Joi.string().required(),
-    city: Joi.string().required(),
-    state: Joi.string().required(),
-    country: Joi.string().required(),
-    // pincode: Joi.string().regex(`^[1-9]{1}[0-9]{2}\\s{0, 1}[0-9]{3}$`).required(),
+    image: Joi.string().required(),
+    lab: Joi.object({
+      name: Joi.string().required(),
+      regID: Joi.string().required(),
+    }),
+    address: Joi.object({
+      address1: Joi.string().required(),
+      address2: Joi.string().required(),
+      city: Joi.string().required(),
+      state: Joi.string().required(),
+      country: Joi.string().required(),
+      pincode: Joi.string().required(),
+    }),
   }),
 };
 
