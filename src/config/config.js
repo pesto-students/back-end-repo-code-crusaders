@@ -28,6 +28,7 @@ const envVarsSchema = Joi.object()
     AWS_SECRET_KEY: Joi.string().description('secret key for aws s3'),
     AWS_BUCKET: Joi.string().description('aws bucket name for storage'),
     AWS_REGION: Joi.string().description('aws region'),
+    FRONTEND_URL: Joi.string().description('front end url for whitelisting'),
   })
   .unknown();
 
@@ -49,6 +50,7 @@ module.exports = {
     },
   },
   backend_url: envVars.BACKEND_URL,
+  frontend_url: envVars.FRONTEND_URL,
   jwt: {
     secret: envVars.JWT_SECRET,
     accessExpirationMinutes: envVars.JWT_ACCESS_EXPIRATION_MINUTES,

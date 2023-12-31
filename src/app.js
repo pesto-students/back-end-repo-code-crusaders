@@ -14,6 +14,7 @@ const { authLimiter } = require('./middlewares/rateLimiter');
 const routes = require('./routes/v1');
 const { errorConverter, errorHandler } = require('./middlewares/error');
 const ApiError = require('./utils/ApiError');
+const envVars = require('./config/config');
 
 const app = express();
 
@@ -25,7 +26,7 @@ if (config.env !== 'test') {
 // set security HTTP headers
 app.use(helmet());
 
-const whitelist = ['http://localhost:3000', process.env.FRONTEND_URL];
+const whitelist = ['http://localhost:3000', envVars.backend_url, envVars.frontend_url];
 const corsOptions = {
   origin(origin, callback) {
     console.log(whitelist.indexOf(origin));
