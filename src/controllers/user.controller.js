@@ -2,7 +2,10 @@ const httpStatus = require('http-status');
 const pick = require('../utils/pick');
 const ApiError = require('../utils/ApiError');
 const catchAsync = require('../utils/catchAsync');
+const { getS3Image } = require('../utils/s3');
 const { User } = require('../models');
+
+const bucketPath = 'user/';
 
 const createUser = catchAsync(async (req, res) => {
   if (await User.isEmailTaken(req.body.email)) {
@@ -59,7 +62,10 @@ const getLabs = catchAsync(async (req, res) => {
   console.log('getLabs', req.user);
 
   const filter = {
-    city: req.user.city,
+    city: {
+      // eslint-disable-next-line security/detect-non-literal-regexp
+      $regex: new RegExp(req.user.city, 'i'),
+    },
     role: 'lab',
   };
 
@@ -68,7 +74,17 @@ const getLabs = catchAsync(async (req, res) => {
   };
 
   const labs = await User.paginate(filter, options);
-
+  labs.results = await Promise.all(
+    labs.results.map(async (lab) => {
+      const labObj = lab.toObject();
+      if (lab.image) {
+        const signedUrl = await getS3Image(lab.image, bucketPath);
+        // Update the image of the current lab with the signedURL
+        return { ...labObj, image: signedUrl };
+      }
+      return labObj;
+    }),
+  );
   console.log(labs);
 
   res.status(httpStatus.OK).send(labs);

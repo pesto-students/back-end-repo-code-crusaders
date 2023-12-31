@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-non-literal-regexp */
 const httpStatus = require('http-status');
 const { v4: uuid } = require('uuid');
 const { uploadS3Image, validateS3Objects, getS3Image } = require('../utils/s3');
@@ -19,55 +20,33 @@ const getProducts = catchAsync(async (req, res) => {
   if (!lab) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'No lab found');
   }
-  // console.log('lab', lab);
+  // lab image populate
+  lab.image = await getS3Image(lab.image, 'user/');
+
+  // set filters
   const filter = {
     lab: lab._id,
   };
+
+  // check active query
   if (typeof req.query.active === 'boolean') {
     filter.active = req.query.active;
   }
-  // options.populate = 'lab.lab';
+  // only show active products to doctor
+  if (req.user.role === 'doctor') {
+    filter.active = true;
+  }
 
-  // console.log(filter);
-  // console.log(options);
-  // const params = {
-  //   name: 'Dental Fillings',
-  //   details: {
-  //     metal: 'Composite',
-  //     features: 'Tooth-colored and natural-looking',
-  //     specifications: 'Various filling sizes',
-  //     materialComposition: 'Composite resin',
-  //   },
-  //   price: 80,
-  //   mrp: 100,
-  //   expectedDays: 5,
-  //   customFields: [
-  //     {
-  //       name: 'Material Type',
-  //     },
-  //     {
-  //       name: 'Shade',
-  //     },
-  //   ],
-  //   lab: req.query.lab,
-  //   rating: 4.3,
-  // };
-  // const product = await Product.create(params);
-  // console.log(product);
-  // await Product.updateMany(
-  //   {},
-  //   {
-  //     $set: {
-  //       images: [
-  //         'f236bb6d-d407-4176-a239-6aab84ff4494silver_cover.jpg',
-  //         'bfbfa72e-abf3-45dd-af5c-c25367496a55gold_cover.jpg',
-  //       ],
-  //     },
-  //   },
-  // );
+  // check for search query
+  if (req.query.search) {
+    const searchRegex = new RegExp(req.query.search, 'i');
+    filter.$or = [{ name: searchRegex }];
+  }
+
+  // query products
   const products = await Product.paginate(filter, options);
-  // products.results = products.results.toObject();
-  console.log('options', products);
+
+  // popuate image signer urls
   products.results = await Promise.all(
     products.results.map(async (product) => {
       const productObj = product.toObject();
@@ -85,20 +64,17 @@ const getProducts = catchAsync(async (req, res) => {
       }
 
       // If the product doesn't have images, return it as is
-      return product;
+      return productObj;
     }),
   );
 
-  console.log(products);
   products.lab = lab;
 
   res.status(httpStatus.OK).send(products);
 });
 
 const getProductCount = catchAsync(async (req, res) => {
-  console.log('user,,,', req.user);
   const id = req.user._id;
-  console.log('id', id);
   const countPromise = Promise.all([
     Product.countDocuments({ lab: id, active: true }),
     Product.countDocuments({ lab: id, active: false }),
@@ -122,7 +98,6 @@ const createProduct = catchAsync(async (req, res) => {
   if (!validateS3Objects(productBody.images, bucketPath)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Invalid Image Names incuded');
   }
-  console.log('product body', productBody);
   const product = await Product.create(productBody);
 
   res.status(httpStatus.CREATED).send(product);
@@ -158,7 +133,6 @@ const updateProduct = catchAsync(async (req, res) => {
   }
   req.body.expectedDays = '13-17';
   Object.assign(product, req.body);
-  console.log(product);
   await product.save();
 
   res.status(httpStatus.OK).send(product);
@@ -178,10 +152,9 @@ const deleteProduct = catchAsync(async (req, res) => {
 
 const getPresignedURL = catchAsync(async (req, res) => {
   // gen preSigned URL
-  // console.log(req.body);
   const { file } = req.body;
   file.name = uuid() + file.name;
-  // console.log(file);
+
   const signedURL = await uploadS3Image(file, bucketPath);
 
   res.status(httpStatus.OK).send({ signedURL, file });
