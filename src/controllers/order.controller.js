@@ -7,28 +7,33 @@ const { Order, Product } = require('../models');
 const getOrders = catchAsync(async (req, res) => {
   const filter = pick(req.query, ['status']);
   const options = pick(req.query, ['limit', 'page']);
-  const orders = await Order.find(filter, options).populate('product');
+  // options.populate = 'product';
+  const orders = await Order.find(filter, options);
+  // console.log("Orders: "+ orders);
 
-  const responseData = orders.map(async (order) => {
-    await order.populate('product');
-    const { product } = order;
-    const currentStatus = order.status;
-    const actions = [];
-    if (currentStatus === 'Pending') {
-      actions.push('Accept');
-      actions.push('Reject');
-    } else if (currentStatus === 'Accepted') {
-      actions.push('Ready To Ship');
-    } else if (currentStatus === 'Ready To Ship') {
-      actions.push('Delivered');
-    }
+  const responseData = await Promise.all(
+    orders.map(async (order) => {
+      await order.populate('product');
+      const { product } = order;
+      // console.log('Order singular: '+ order);
+      const currentStatus = order.status;
+      const actions = [];
+      if (currentStatus === 'Pending') {
+        actions.push('Accept');
+        actions.push('Reject');
+      } else if (currentStatus === 'Accepted') {
+        actions.push('Ready To Ship');
+      } else if (currentStatus === 'Ready To Ship') {
+        actions.push('Delivered');
+      }
 
-    return {
-      orderDetails: order,
-      productDetails: product,
-      actionButton: actions,
-    };
-  });
+      return {
+        orderDetails: order,
+        productDetails: product,
+        actionButton: actions,
+      };
+    }),
+  );
   res.send(responseData);
 });
 
@@ -58,13 +63,13 @@ const createOrder = catchAsync(async (req, res) => {
 
 const changeStatus = catchAsync(async (req, res) => {
   const { orderId } = req.params;
-  const { body } = req;
-  const order = Order.findById(orderId);
+  const { status } = req.body;
+  const order = await Order.findByIdAndUpdate(orderId, { status }, { new: true });
   if (!order) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+    throw new ApiError(httpStatus.NOT_FOUND, 'Order not found');
   }
-  Object.assign(order, body);
-  await order.save();
+  // Object.assign(order, body);
+  // await order.save();
   res.send(order);
 });
 
