@@ -1,15 +1,30 @@
 const Joi = require('joi');
-// const { objectId } = require('./custom.validation');
+const { objectId } = require('./custom.validation');
 
 const getOrders = {
   query: Joi.object().keys({
-    status: Joi.string().valid('orders', 'acepted'),
+    status: Joi.string().valid('pending', 'accepted', 'readyToShip', 'outForDelivery', 'delivered'),
     sortBy: Joi.string().allow(),
     limit: Joi.number().integer(),
     page: Joi.number().integer(),
   }),
 };
 
+const createOrder = {
+  body: Joi.object().keys({
+    lab: Joi.string().custom(objectId),
+    product: Joi.string().custom(objectId),
+  }),
+};
+
+const updateStatus = {
+  body: Joi.object().keys({
+    active: Joi.string().valid('pending', 'accepted', 'readyToShip', 'outForDelivery', 'delivered'),
+  }),
+};
+
 module.exports = {
   getOrders,
+  createOrder,
+  updateStatus,
 };

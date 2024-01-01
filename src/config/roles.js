@@ -9,6 +9,7 @@ const allRoles = {
     'productImage',
     'createProduct',
     'getOrders',
+    'changeOrderStatus',
   ],
   // admin: ['getUsers', 'manageUsers'],
 };
