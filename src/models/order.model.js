@@ -11,9 +11,13 @@ const orderSchema = mongoose.Schema(
     },
     doctor: {
       type: mongoose.Schema.ObjectId,
+      ref: 'User',
+      required: true,
     },
     lab: {
       type: mongoose.Schema.ObjectId,
+      ref: 'User',
+      required: true,
     },
     address: {
       type: Object,
