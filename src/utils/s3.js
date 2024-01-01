@@ -32,7 +32,8 @@ const uploadS3Image = async (file, bucketPath) => {
 
 const getS3Image = async (file, bucketPath) => {
   const getObjectParams = {
-    Key: `${bucketPath}${file.name}`,
+    Bucket: aws.bucket_name,
+    Key: `${bucketPath}${file}`,
   };
   const command = new GetObjectCommand(getObjectParams);
   const url = await getSignedUrl(client, command, { expiresIn: 3600 });

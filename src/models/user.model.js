@@ -24,6 +24,10 @@ const labSchema = mongoose.Schema({
     type: String,
     required: true,
   },
+  rating: {
+    type: Number,
+    default: 0.0,
+  },
 });
 
 const AddressSchema = mongoose.Schema({
@@ -120,8 +124,8 @@ const userSchema = mongoose.Schema(
       type: pointSchema,
     },
     primaryAddress: {
-      type: Number,
-      default: 0,
+      type: mongoose.Schema.ObjectId,
+      ref: 'Address',
     },
     phone: {
       type: String,
@@ -171,6 +175,12 @@ userSchema.pre('save', async function (next) {
   const user = this;
   if (user.isModified('password')) {
     user.password = await bcrypt.hash(user.password, 8);
+  }
+
+  // Check if primaryAddress is not set and it's a new document
+  if (!user.primaryAddress && user.isNew) {
+    user.primaryAddress = user.address.length > 0 ? user.address[0]._id : null;
+    user.city = user.address.length > 0 ? user.address[0].city : null;
   }
   next();
 });

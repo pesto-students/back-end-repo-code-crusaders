@@ -1,6 +1,7 @@
+/* eslint-disable security/detect-non-literal-regexp */
 const httpStatus = require('http-status');
 const { v4: uuid } = require('uuid');
-const { uploadS3Image, validateS3Objects } = require('../utils/s3');
+const { uploadS3Image, validateS3Objects, getS3Image } = require('../utils/s3');
 const pick = require('../utils/pick');
 const ApiError = require('../utils/ApiError');
 const catchAsync = require('../utils/catchAsync');
@@ -19,54 +20,61 @@ const getProducts = catchAsync(async (req, res) => {
   if (!lab) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'No lab found');
   }
-  // console.log('lab', lab);
+  // lab image populate
+  lab.image = await getS3Image(lab.image, 'user/');
+
+  // set filters
   const filter = {
     lab: lab._id,
   };
+
+  // check active query
   if (typeof req.query.active === 'boolean') {
     filter.active = req.query.active;
   }
-  // options.populate = 'lab.lab';
+  // only show active products to doctor
+  if (req.user.role === 'doctor') {
+    filter.active = true;
+  }
 
-  // console.log(filter);
-  // console.log(options);
-  // const params = {
-  //   name: 'Dental Fillings',
-  //   details: {
-  //     metal: 'Composite',
-  //     features: 'Tooth-colored and natural-looking',
-  //     specifications: 'Various filling sizes',
-  //     materialComposition: 'Composite resin',
-  //   },
-  //   price: 80,
-  //   mrp: 100,
-  //   expectedDays: 5,
-  //   customFields: [
-  //     {
-  //       name: 'Material Type',
-  //     },
-  //     {
-  //       name: 'Shade',
-  //     },
-  //   ],
-  //   lab: req.query.lab,
-  //   rating: 4.3,
-  // };
-  // const product = await Product.create(params);
-  // console.log(product);
-  console.log(options);
+  // check for search query
+  if (req.query.search) {
+    const searchRegex = new RegExp(req.query.search, 'i');
+    filter.$or = [{ name: searchRegex }];
+  }
+
+  // query products
   const products = await Product.paginate(filter, options);
 
-  console.log(products);
+  // popuate image signer urls
+  products.results = await Promise.all(
+    products.results.map(async (product) => {
+      const productObj = product.toObject();
+      if (productObj.images && productObj.images.length > 0) {
+        // Map over the images of the current product and update them
+        const updatedImages = await Promise.all(
+          productObj.images.map(async (image) => {
+            const signedUrl = await getS3Image(image, bucketPath);
+            return signedUrl;
+          }),
+        );
+
+        // Update the images array of the current product with the updatedImages
+        return { ...productObj, images: updatedImages };
+      }
+
+      // If the product doesn't have images, return it as is
+      return productObj;
+    }),
+  );
+
   products.lab = lab;
 
   res.status(httpStatus.OK).send(products);
 });
 
 const getProductCount = catchAsync(async (req, res) => {
-  console.log('user,,,', req.user);
   const id = req.user._id;
-  console.log('id', id);
   const countPromise = Promise.all([
     Product.countDocuments({ lab: id, active: true }),
     Product.countDocuments({ lab: id, active: false }),
@@ -82,15 +90,15 @@ const getProductCount = catchAsync(async (req, res) => {
 });
 
 const createProduct = catchAsync(async (req, res) => {
-  const labBody = req.body;
-  labBody.lab = req.user._id;
-  labBody.active = true;
+  const productBody = req.body;
+  productBody.lab = req.user._id;
+  productBody.active = true;
 
   // validate Images.
-  if (!validateS3Objects(labBody.images)) {
+  if (!validateS3Objects(productBody.images, bucketPath)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Invalid Image Names incuded');
   }
-  const product = await Product.create(labBody);
+  const product = await Product.create(productBody);
 
   res.status(httpStatus.CREATED).send(product);
 });
@@ -98,7 +106,20 @@ const createProduct = catchAsync(async (req, res) => {
 const getProduct = catchAsync(async (req, res) => {
   const { productId } = req.params;
 
-  const product = await Product.findById(productId);
+  let product = await Product.findById(productId).populate('lab');
+  if (!product) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Product not found');
+  }
+  product = product.toObject();
+
+  // get Image signed URL
+  const updatedImages = await Promise.all(
+    product.images.map(async (image) => {
+      const signedUrl = await getS3Image(image, bucketPath);
+      return signedUrl;
+    }),
+  );
+  product.images = updatedImages;
 
   res.status(httpStatus.OK).send(product);
 });
@@ -110,6 +131,7 @@ const updateProduct = catchAsync(async (req, res) => {
   if (!product) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'No Product Found');
   }
+  req.body.expectedDays = '13-17';
   Object.assign(product, req.body);
   await product.save();
 
@@ -130,10 +152,9 @@ const deleteProduct = catchAsync(async (req, res) => {
 
 const getPresignedURL = catchAsync(async (req, res) => {
   // gen preSigned URL
-  // console.log(req.body);
   const { file } = req.body;
   file.name = uuid() + file.name;
-  // console.log(file);
+
   const signedURL = await uploadS3Image(file, bucketPath);
 
   res.status(httpStatus.OK).send({ signedURL, file });

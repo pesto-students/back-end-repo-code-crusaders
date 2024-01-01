@@ -1,5 +1,5 @@
 const allRoles = {
-  doctor: ['verify', 'productImage', 'getProduct', 'getProducts', 'createProduct'],
+  doctor: ['verify', 'productImage', 'getProduct', 'getProducts', 'createProduct', 'getLabs'],
   lab: ['verify', 'updateProduct', 'deleteProduct', 'getProducts', 'getProduct', 'productImage', 'createProduct'],
   // admin: ['getUsers', 'manageUsers'],
 };

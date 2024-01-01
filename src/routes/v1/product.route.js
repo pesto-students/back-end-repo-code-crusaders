@@ -11,7 +11,7 @@ router
   .post(auth('createProduct'), validate(productValidation.createProduct), productController.createProduct)
   .get(auth('getProducts'), validate(productValidation.getProducts), productController.getProducts);
 
-router.post('/image', productController.getPresignedURL);
+router.post('/image', auth(), productController.getPresignedURL);
 router.get('/count', auth('getProducts'), productController.getProductCount);
 router
   .route('/:productId')

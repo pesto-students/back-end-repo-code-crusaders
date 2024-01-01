@@ -77,11 +77,8 @@ const verifyUser = catchAsync(async (req, res) => {
 
 const getPresignedURL = catchAsync(async (req, res) => {
   // gen preSigned URL
-  console.log(req.body);
   const { file } = req.body;
   file.name = uuid() + file.name;
-
-  console.log(file);
   const signedURL = await uploadS3Image(file, bucketPath);
 
   res.status(httpStatus.OK).send({ signedURL, file });
