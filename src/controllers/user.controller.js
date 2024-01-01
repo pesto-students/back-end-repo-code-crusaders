@@ -60,7 +60,7 @@ const deleteUser = catchAsync(async (req, res) => {
 
 const getLabs = catchAsync(async (req, res) => {
   console.log('getLabs', req.user);
-
+  const options = pick(req.query, ['sortBy', 'limit', 'page']);
   const filter = {
     city: {
       // eslint-disable-next-line security/detect-non-literal-regexp
@@ -69,9 +69,7 @@ const getLabs = catchAsync(async (req, res) => {
     role: 'lab',
   };
 
-  const options = {
-    populate: 'lab',
-  };
+  options.populate = 'lab';
 
   const labs = await User.paginate(filter, options);
   labs.results = await Promise.all(
