@@ -3,7 +3,7 @@ const { objectId } = require('./custom.validation');
 
 const getOrders = {
   query: Joi.object().keys({
-    status: Joi.string().valid('pending', 'accepted', 'readyToShip', 'outForDelivery', 'delivered'),
+    status: Joi.string().valid('pending', 'accepted', 'readyToShip', 'outForDelivery', 'delivered', 'rejected'),
     sortBy: Joi.string().allow(),
     limit: Joi.number().integer(),
     page: Joi.number().integer(),
@@ -19,7 +19,7 @@ const createOrder = {
 
 const updateStatus = {
   body: Joi.object().keys({
-    active: Joi.string().valid('pending', 'accepted', 'readyToShip', 'outForDelivery', 'delivered'),
+    status: Joi.string().valid('pending', 'accepted', 'readyToShip', 'outForDelivery', 'delivered', 'rejected'),
   }),
 };
 

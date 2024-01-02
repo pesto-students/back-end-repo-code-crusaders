@@ -6,35 +6,79 @@ const { Order, Product } = require('../models');
 
 const getOrders = catchAsync(async (req, res) => {
   const filter = pick(req.query, ['status']);
-  const options = pick(req.query, ['limit', 'page']);
-  // options.populate = 'product';
-  const orders = await Order.find(filter, options);
+  const options = pick(req.query, ['limit', 'page', 'sortBy']);
+  options.populate = 'product';
+
+  if (req.user.role === 'lab') {
+    filter.lab = req.user._id;
+  } else if (req.user.role === 'doctor') {
+    filter.doctor = req.user._id;
+  }
+
+  const orders = await Order.paginate(filter, options);
+
+  // const orders = await Order.find(filter, options);
   // console.log("Orders: "+ orders);
 
-  const responseData = await Promise.all(
-    orders.map(async (order) => {
-      await order.populate('product');
-      const { product } = order;
-      // console.log('Order singular: '+ order);
-      const currentStatus = order.status;
+  if (req.user.role === 'lab') {
+    orders.results = orders.results.map((order) => {
+      const orderObj = order.toObject();
+      const { status } = orderObj;
       const actions = [];
-      if (currentStatus === 'Pending') {
-        actions.push('Accept');
-        actions.push('Reject');
-      } else if (currentStatus === 'Accepted') {
-        actions.push('Ready To Ship');
-      } else if (currentStatus === 'Ready To Ship') {
-        actions.push('Delivered');
+      if (status.toLowerCase() === 'pending'.toLowerCase()) {
+        actions.push(
+          {
+            label: 'Accept',
+            status: 'accepted',
+          },
+          {
+            label: 'Reject',
+            status: 'rejected',
+          },
+        );
+      } else if (status.toLowerCase() === 'accepted'.toLowerCase()) {
+        actions.push({
+          label: 'Ready to Ship',
+          status: 'readyToShip',
+        });
+      } else if (status.toLowerCase() === 'readyToShip'.toLowerCase()) {
+        actions.push({
+          label: 'Delivery',
+          status: 'delivered',
+        });
       }
 
-      return {
-        orderDetails: order,
-        productDetails: product,
-        actionButton: actions,
-      };
-    }),
-  );
-  res.send(responseData);
+      if (actions.length > 0) {
+        orderObj.actions = actions;
+      }
+      return orderObj;
+    });
+  }
+
+  // const responseData = await Promise.all(
+  //   orders.map(async (order) => {
+  //     await order.populate('product');
+  //     const { product } = order;
+  //     // console.log('Order singular: '+ order);
+  //     const currentStatus = order.status;
+  //     const actions = [];
+  //     if (currentStatus === 'Pending') {
+  //       actions.push('Accept');
+  //       actions.push('Reject');
+  //     } else if (currentStatus === 'Accepted') {
+  //       actions.push('Ready To Ship');
+  //     } else if (currentStatus === 'Ready To Ship') {
+  //       actions.push('Delivered');
+  //     }
+
+  //     return {
+  //       orderDetails: order,
+  //       productDetails: product,
+  //       actionButton: actions,
+  //     };
+  //   }),
+  // );
+  res.send(orders);
 });
 
 const getOrdersNew = catchAsync(async (req, res) => {
@@ -42,7 +86,8 @@ const getOrdersNew = catchAsync(async (req, res) => {
     doctor: req.user._id,
   };
   const options = pick(req.query, ['limit', 'page', 'sortBy']);
-  const orders = await Order.paginate(filter, options).populate('product');
+  options.populate = 'product';
+  const orders = await Order.paginate(filter, options);
 
   res.status(httpStatus.OK).res(orders);
 });
