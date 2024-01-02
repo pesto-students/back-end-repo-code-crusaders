@@ -58,6 +58,7 @@ const AddressSchema = mongoose.Schema({
     required: true,
   },
 });
+mongoose.model('Address', AddressSchema);
 
 const pointSchema = new mongoose.Schema({
   type: {
@@ -124,8 +125,8 @@ const userSchema = mongoose.Schema(
       type: pointSchema,
     },
     primaryAddress: {
-      type: mongoose.Schema.ObjectId,
-      ref: 'Address',
+      type: Number,
+      default: 0,
     },
     phone: {
       type: String,
@@ -179,7 +180,7 @@ userSchema.pre('save', async function (next) {
 
   // Check if primaryAddress is not set and it's a new document
   if (!user.primaryAddress && user.isNew) {
-    user.primaryAddress = user.address.length > 0 ? user.address[0]._id : null;
+    user.primaryAddress = user.address.length > 0 ? 0 : null;
     user.city = user.address.length > 0 ? user.address[0].city : null;
   }
   next();

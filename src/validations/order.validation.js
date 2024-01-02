@@ -14,6 +14,7 @@ const createOrder = {
   body: Joi.object().keys({
     lab: Joi.string().custom(objectId),
     product: Joi.string().custom(objectId),
+    notes: Joi.string(),
   }),
 };
 

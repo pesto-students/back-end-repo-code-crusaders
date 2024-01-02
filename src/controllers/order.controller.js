@@ -2,7 +2,7 @@ const httpStatus = require('http-status');
 const pick = require('../utils/pick');
 const ApiError = require('../utils/ApiError');
 const catchAsync = require('../utils/catchAsync');
-const { Order, Product } = require('../models');
+const { Order, Product, User } = require('../models');
 
 const getOrders = catchAsync(async (req, res) => {
   const filter = pick(req.query, ['status']);
@@ -97,9 +97,15 @@ const createOrder = catchAsync(async (req, res) => {
   if (!product || product.lab.toString() !== req.body.lab.toString()) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Product or Lab is not valid');
   }
+
+  const user = await User.findById(req.user._id);
+  console.log('user', user);
   const params = {
     doctor: req.user._id,
     ...req.body,
+    address: user.address[user.primaryAddress],
+    orderDate: new Date().toISOString(),
+    status: 'pending',
   };
   const order = await Order.create(params);
 
