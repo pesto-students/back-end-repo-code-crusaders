@@ -2,6 +2,7 @@ const httpStatus = require('http-status');
 const pick = require('../utils/pick');
 const ApiError = require('../utils/ApiError');
 const catchAsync = require('../utils/catchAsync');
+const { getS3Image } = require('../utils/s3');
 const { Order, Product, User } = require('../models');
 
 const getOrders = catchAsync(async (req, res) => {
@@ -17,67 +18,55 @@ const getOrders = catchAsync(async (req, res) => {
 
   const orders = await Order.paginate(filter, options);
 
-  // const orders = await Order.find(filter, options);
-  // console.log("Orders: "+ orders);
-
-  if (req.user.role === 'lab') {
-    orders.results = orders.results.map((order) => {
+  orders.results = await Promise.all(
+    orders.results.map(async (order) => {
       const orderObj = order.toObject();
-      const { status } = orderObj;
-      const actions = [];
-      if (status.toLowerCase() === 'pending'.toLowerCase()) {
-        actions.push(
-          {
-            label: 'Accept',
-            status: 'accepted',
-          },
-          {
-            label: 'Reject',
-            status: 'rejected',
-          },
-        );
-      } else if (status.toLowerCase() === 'accepted'.toLowerCase()) {
-        actions.push({
-          label: 'Ready to Ship',
-          status: 'readyToShip',
-        });
-      } else if (status.toLowerCase() === 'readyToShip'.toLowerCase()) {
-        actions.push({
-          label: 'Delivery',
-          status: 'delivered',
-        });
+      const { product, status } = orderObj;
+
+      if (req.user.role === 'doctor') {
+        if (product.images && product.images.length > 0) {
+          const signedUrl = await getS3Image(product.images[0], 'product/');
+
+          // Update the images array of the current product with the updatedImages
+          product.images[0] = signedUrl;
+        }
       }
 
-      if (actions.length > 0) {
-        orderObj.actions = actions;
+      if (req.user.role === 'lab') {
+        const actions = [];
+        if (status.toLowerCase() === 'pending'.toLowerCase()) {
+          actions.push(
+            {
+              label: 'Accept',
+              status: 'accepted',
+            },
+            {
+              label: 'Reject',
+              status: 'rejected',
+            },
+          );
+        } else if (status.toLowerCase() === 'accepted'.toLowerCase()) {
+          actions.push({
+            label: 'Ready to Ship',
+            status: 'readyToShip',
+          });
+        } else if (status.toLowerCase() === 'readyToShip'.toLowerCase()) {
+          actions.push({
+            label: 'Delivery',
+            status: 'delivered',
+          });
+        }
+
+        if (actions.length > 0) {
+          orderObj.actions = actions;
+        }
       }
+
+      // If the product doesn't have images, return it as is
       return orderObj;
-    });
-  }
+    }),
+  );
 
-  // const responseData = await Promise.all(
-  //   orders.map(async (order) => {
-  //     await order.populate('product');
-  //     const { product } = order;
-  //     // console.log('Order singular: '+ order);
-  //     const currentStatus = order.status;
-  //     const actions = [];
-  //     if (currentStatus === 'Pending') {
-  //       actions.push('Accept');
-  //       actions.push('Reject');
-  //     } else if (currentStatus === 'Accepted') {
-  //       actions.push('Ready To Ship');
-  //     } else if (currentStatus === 'Ready To Ship') {
-  //       actions.push('Delivered');
-  //     }
-
-  //     return {
-  //       orderDetails: order,
-  //       productDetails: product,
-  //       actionButton: actions,
-  //     };
-  //   }),
-  // );
   res.send(orders);
 });
 
@@ -99,7 +88,6 @@ const createOrder = catchAsync(async (req, res) => {
   }
 
   const user = await User.findById(req.user._id);
-  console.log('user', user);
   const params = {
     doctor: req.user._id,
     ...req.body,
