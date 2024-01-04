@@ -11,21 +11,42 @@ const orderSchema = mongoose.Schema(
     },
     doctor: {
       type: mongoose.Schema.ObjectId,
+      ref: 'User',
+      required: true,
     },
     lab: {
       type: mongoose.Schema.ObjectId,
+      ref: 'User',
+      required: true,
     },
     address: {
       type: Object,
       schema: {
-        addressline1: {
+        address1: {
+          type: String,
+          required: true,
+        },
+        address2: {
           type: String,
         },
-        addressline2: {
+        landmark: {
           type: String,
+        },
+        city: {
+          type: String,
+          required: true,
+        },
+        state: {
+          type: String,
+          required: true,
+        },
+        country: {
+          type: String,
+          required: true,
         },
         pincode: {
           type: String,
+          required: true,
         },
       },
     },
@@ -37,7 +58,7 @@ const orderSchema = mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['pending', 'accepted', 'readyToShip', 'outForDelivery', 'delivered'],
+      enum: ['pending', 'accepted', 'readyToShip', 'outForDelivery', 'delivered', 'rejected'],
       required: true,
     },
     expectedDate: {
