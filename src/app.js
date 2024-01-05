@@ -29,8 +29,6 @@ app.use(helmet());
 const whitelist = ['http://localhost:3000', envVars.backend_url, envVars.frontend_url];
 const corsOptions = {
   origin(origin, callback) {
-    console.log(whitelist.indexOf(origin));
-    console.log(origin);
     if (whitelist.indexOf(origin) !== -1) {
       callback(null, true);
     } else {

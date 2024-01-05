@@ -1,10 +1,8 @@
 const express = require('express');
 const authRoute = require('./auth.route');
-const userRoute = require('./user.route');
 const productRoute = require('./product.route');
 const labRouter = require('./labs.route');
 const orderRoute = require('./order.route');
-// const docsRoute = require('./docs.route');
 // const config = require('../../config/config');
 
 const router = express.Router();
@@ -29,7 +27,6 @@ const router = express.Router();
 // ];
 
 router.use('/auth', authRoute);
-router.use('/users', userRoute);
 router.use('/product', productRoute);
 router.use('/lab', labRouter);
 router.use('/orders', orderRoute);

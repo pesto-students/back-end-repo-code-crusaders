@@ -59,7 +59,6 @@ const deleteUser = catchAsync(async (req, res) => {
 });
 
 const getLabs = catchAsync(async (req, res) => {
-  console.log('getLabs', req.user);
   const options = pick(req.query, ['sortBy', 'limit', 'page']);
   const filter = {
     city: {
@@ -83,7 +82,6 @@ const getLabs = catchAsync(async (req, res) => {
       return labObj;
     }),
   );
-  console.log(labs);
 
   res.status(httpStatus.OK).send(labs);
 });
@@ -94,6 +92,5 @@ module.exports = {
   getUser,
   updateUser,
   deleteUser,
-
   getLabs,
 };

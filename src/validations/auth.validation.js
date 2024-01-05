@@ -7,15 +7,18 @@ const registerDoctor = {
     password: Joi.string().required().custom(password),
     firstname: Joi.string().required(),
     lastname: Joi.string().required(),
-    doctorID: Joi.string().required(),
-    hospital: Joi.string().required(),
-    addressLine1: Joi.string().required(),
-    landmark: Joi.string().required(),
-    city: Joi.string().required(),
-    state: Joi.string().required(),
-    // country: Joi.string().required(),
-    // image:
-    // pincode: Joi.string().regex(`^[1-9]{1}[0-9]{2}\\s{0, 1}[0-9]{3}$`).required(),
+    doctor: Joi.object({
+      regID: Joi.string().required(),
+      hospital: Joi.string().required(),
+    }),
+    address: Joi.object({
+      address1: Joi.string().required(),
+      address2: Joi.string().required(),
+      city: Joi.string().required(),
+      state: Joi.string().required(),
+      country: Joi.string().required(),
+      pincode: Joi.string().required(),
+    }),
   }),
 };
 
